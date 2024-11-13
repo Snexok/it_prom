@@ -8,7 +8,7 @@
       <label>Родительский отдел:</label>
       <select v-model="form.parent">
         <option :value="null">Нет</option>
-        <option v-for="dept in departments.filter(d => d.id !== form.id && d.parent?.id !== form.id )"
+        <option v-for="dept in departments.filter(d => form.id != d.id && !isDescendant(form, d))"
                 :key="dept.id"
                 :value="dept">
           {{ dept.name }}
@@ -86,11 +86,20 @@ export default defineComponent({
       await loadDepartments();
     };
 
+    const isDescendant = (currentDepartment: Department, potentialChild: Department): boolean => {
+      if (!potentialChild.parent) return false;
+      if (potentialChild.parent.id === currentDepartment.id) return true;
+
+      const parent = departments.value.find(dept => dept.id === potentialChild.parent?.id);
+      return parent ? isDescendant(currentDepartment, parent) : false;
+    };
+
     onMounted(loadDepartments);
 
     return {
       departments,
       form,
+      isDescendant,
       clearForm,
       saveDepartment,
       editDepartment,
